@@ -1,0 +1,21 @@
+{
+  "name": "visual-darts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ohanhi/visual-darts.git"
+  },
+  "author": "ohanhi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ohanhi/visual-darts/issues"
+  },
+  "homepage": "https://github.com/ohanhi/visual-darts#readme"
+}
