@@ -13,28 +13,39 @@ function closest(selector, event) {
 
 function typeFromHref(href) {
   switch (href) {
-    case "#outer":
-    case "#inner":
-      return "S";
     case "#triple":
       return "T";
     case "#double":
       return "D"
+    default:
+      return "";
   }
-  return null;
 }
 
 function decodeType(el) {
   return el.dataset.type || typeFromHref(el.getAttribute("xlink:href"));
 }
 
+function typeToMultiplier(t) {
+  switch (t.toLowerCase()) {
+    case "d":
+      return 2;
+    case "t":
+      return 3;
+    default:
+      return 1;
+  }
+}
+
 // decodeClick : Event -> Maybe [ score, type ]
 function decodeClick(event) {
   const match = closest('[data-score]', event);
   if (match) {
-    const score = Number(match.dataset.score);
+    const baseScore = Number(match.dataset.score);
     const type = decodeType(event.target);
-    return { score: score, type: type };
+    const score = baseScore * typeToMultiplier(type);
+    const name = type + String(baseScore);
+    return { score: score, name: name };
   } else {
     console.log("(no match)");
     return null;
@@ -58,7 +69,7 @@ const main = ({DOM, anyClick$}) => {
         div([
           h1('Score: ' + (501 - state.score)),
           ol(
-            state.hits.map(hit => li(hit.type+hit.score))
+            state.hits.map(hit => li(hit.name))
           )
         ])
       )
