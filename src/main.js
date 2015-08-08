@@ -2,21 +2,64 @@ import Cycle from '@cycle/core';
 import CycleDOM from '@cycle/dom';
 import _hh from 'hyperscript-helpers';
 
-const { div, span, h1, a, button } = _hh(CycleDOM.h);
+const { h1, div, ol, li } = _hh(CycleDOM.h);
 
-const main = ({DOM}) => {
+function closest(selector, event) {
+  const path = [].slice.call(event.path);
+  const match = path.filter(el =>
+    el !== window && el !== document && el.matches(selector));
+  return (match.length > 0 ? match[0] : null);
+}
 
-  let action$ = Cycle.Rx.Observable.merge(
-    DOM.get('#decrement', 'click').map(ev => -1),
-    DOM.get('#increment', 'click').map(ev => +1)
-  );
-  let count$ = action$.startWith(0).scan((x,y) => x+y);
+function typeFromHref(href) {
+  switch (href) {
+    case "#outer":
+    case "#inner":
+      return "S";
+    case "#triple":
+      return "T";
+    case "#double":
+      return "D"
+  }
+  return null;
+}
+
+function decodeType(el) {
+  return el.dataset.type || typeFromHref(el.getAttribute("xlink:href"));
+}
+
+// decodeClick : Event -> Maybe [ score, type ]
+function decodeClick(event) {
+  const match = closest('[data-score]', event);
+  if (match) {
+    const score = Number(match.dataset.score);
+    const type = decodeType(event.target);
+    return { score: score, type: type };
+  } else {
+    console.log("(no match)");
+    return null;
+  }
+}
+
+const anyClick = () => Cycle.Rx.Observable.fromEvent(document, 'click');
+
+const main = ({DOM, anyClick$}) => {
+
+  const state$ =
+    anyClick$
+      .map(decodeClick)
+      .startWith({ hits: [], score: 0 })
+      .filter(c => c !== null)
+      .scan((acc, hit) => ({ hits: acc.hits.concat(hit), score: acc.score+hit.score }))
+      .do(x => console.log(x));
+
   return {
-    DOM: count$.map(count =>
+    DOM: state$.map(state =>
         div([
-          button({id: 'decrement'}, 'Decrement'),
-          button({id: 'increment'}, 'Increment'),
-          h1('Counter: ' + count)
+          h1('Score: ' + (501 - state.score)),
+          ol(
+            state.hits.map(hit => li(hit.type+hit.score))
+          )
         ])
       )
   };
@@ -24,7 +67,8 @@ const main = ({DOM}) => {
 };
 
 const drivers = {
-  DOM: CycleDOM.makeDOMDriver('#app')
+  DOM: CycleDOM.makeDOMDriver('#app'),
+  anyClick$: anyClick
 };
 
 Cycle.run(main, drivers);
